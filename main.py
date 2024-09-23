@@ -60,6 +60,7 @@ m.fit(df_train)
 future = m.make_future_dataframe(periods=period)
 future['cap'] = df_train['cap'].max()
 forecast = m.predict(future)
+forecast.to_csv('forecast_course_'+selected_cryptocurrency + '_' + TODAY + '.csv' )
 
 st.subheader('Forecast data')
 st.write(forecast.tail())
