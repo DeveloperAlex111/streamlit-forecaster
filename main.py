@@ -1,3 +1,5 @@
+#To run the app in terminal 'streamlit run main.py'
+
 import streamlit as st
 import numpy as np
 np.float_ = np.float64 #to resolve trouble with installing Prophet with using deprecated functions of numpy
@@ -6,6 +8,7 @@ from datetime import date
 from prophet import Prophet
 from prophet.plot import plot_plotly
 from plotly import graph_objs as go
+
 
 START = "2015-01-01" 
 TODAY = date.today().strftime("%Y-%m-%d")
@@ -20,6 +23,7 @@ period = n_years * 365
 def load_data(ticker):
     data = yf.download(ticker, START, TODAY)
     data.reset_index(inplace=True)
+    data.columns = ['_'.join(col).strip() for col in data.columns.values] #to join the multi level columns index naming like ('Close', 'BTC-USD') to 'Close_BTC-USD'
     return data
 
 date_load_state = st.text("Load data...")
@@ -27,20 +31,20 @@ data = load_data(selected_cryptocurrency)
 date_load_state.text("Loading data..done")
 
 st.subheader('Raw data')
-st.write(data.tail())
+st.write(data.tail(40))
 
 def plot_raw_data():
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['Date'], y = data['Open'], name='price_open'))
-    fig.add_trace(go.Scatter(x=data['Date'], y = data['Close'], name='price_close'))
+    fig.add_trace(go.Scatter(x=data['Date_'], y = data[('Open_' + selected_cryptocurrency)], name='price_open'))
+    fig.add_trace(go.Scatter(x=data['Date_'], y = data[('Close_' + selected_cryptocurrency)], name='price_close'))
     fig.layout.update(title_text="Time Series Data", xaxis_rangeslider_visible=True)
     st.plotly_chart(fig)
     
 plot_raw_data()
 
 # Forecasting
-df_train = data[['Date', 'Close']]
-df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+df_train = data[['Date_', 'Close_' + selected_cryptocurrency]]
+df_train = df_train.rename(columns={"Date_": "ds", 'Close_' + selected_cryptocurrency: "y"})
 
 ## Creating model parameters
 model_param ={
